@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
  * Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -45,6 +49,7 @@ struct devfreq_node {
 	struct list_head list;
 	struct freq_map **map;
 	struct freq_map *common_map;
+<<<<<<< HEAD
 	unsigned int timeout;
 	struct delayed_work dwork;
 	bool drop;
@@ -116,12 +121,18 @@ out:
 	mutex_unlock(&df->lock);
 	return ret;
 }
+=======
+};
+static LIST_HEAD(devfreq_list);
+static DEFINE_MUTEX(state_lock);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 static void update_all_devfreqs(void)
 {
 	struct devfreq_node *node;
 
 	list_for_each_entry(node, &devfreq_list, list) {
+<<<<<<< HEAD
 		update_node(node);
 	}
 }
@@ -136,6 +147,16 @@ static void do_timeout(struct work_struct *work)
 	node->drop = true;
 	update_devfreq(df);
 	mutex_unlock(&df->lock);
+=======
+		struct devfreq *df = node->df;
+		if (!node->df)
+			continue;
+		mutex_lock(&df->lock);
+		update_devfreq(df);
+		mutex_unlock(&df->lock);
+
+	}
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 }
 
 static struct devfreq_node *find_devfreq_node(struct device *dev)
@@ -181,19 +202,30 @@ static int cpufreq_policy_notifier(struct notifier_block *nb,
 	struct cpufreq_policy *policy = data;
 
 	switch (event) {
+<<<<<<< HEAD
 	case CPUFREQ_CREATE_POLICY:
+=======
+	case CPUFREQ_GOV_START:
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		mutex_lock(&state_lock);
 		add_policy(policy);
 		update_all_devfreqs();
 		mutex_unlock(&state_lock);
 		break;
 
+<<<<<<< HEAD
 	case CPUFREQ_REMOVE_POLICY:
 		mutex_lock(&state_lock);
 		if (state[policy->cpu]) {
 			state[policy->cpu]->on = false;
 			update_all_devfreqs();
 		}
+=======
+	case CPUFREQ_GOV_STOP:
+		mutex_lock(&state_lock);
+		state[policy->cpu]->on = false;
+		update_all_devfreqs();
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		mutex_unlock(&state_lock);
 		break;
 	}
@@ -240,10 +272,17 @@ static int register_cpufreq(void)
 	unsigned int cpu;
 	struct cpufreq_policy *policy;
 
+<<<<<<< HEAD
 	mutex_lock(&cpufreq_reg_lock);
 
 	if (cpufreq_cnt)
 		goto cnt_not_zero;
+=======
+	mutex_lock(&state_lock);
+
+	if (cpufreq_cnt)
+		goto out;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	get_online_cpus();
 	ret = cpufreq_register_notifier(&cpufreq_policy_nb,
@@ -266,12 +305,21 @@ static int register_cpufreq(void)
 			cpufreq_cpu_put(policy);
 		}
 	}
+<<<<<<< HEAD
 out:
 	put_online_cpus();
 cnt_not_zero:
 	if (!ret)
 		cpufreq_cnt++;
 	mutex_unlock(&cpufreq_reg_lock);
+=======
+	put_online_cpus();
+
+out:
+	if (!ret)
+		cpufreq_cnt++;
+	mutex_unlock(&state_lock);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	return ret;
 }
 
@@ -280,7 +328,11 @@ static int unregister_cpufreq(void)
 	int ret = 0;
 	int cpu;
 
+<<<<<<< HEAD
 	mutex_lock(&cpufreq_reg_lock);
+=======
+	mutex_lock(&state_lock);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	if (cpufreq_cnt > 1)
 		goto out;
@@ -300,7 +352,11 @@ static int unregister_cpufreq(void)
 
 out:
 	cpufreq_cnt--;
+<<<<<<< HEAD
 	mutex_unlock(&cpufreq_reg_lock);
+=======
+	mutex_unlock(&state_lock);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	return ret;
 }
 
@@ -358,7 +414,11 @@ static unsigned int cpu_to_dev_freq(struct devfreq *df, unsigned int cpu)
 	freq = map->target_freq;
 
 out:
+<<<<<<< HEAD
 	dev_dbg(df->dev.parent, "CPU%u: %d -> dev: %u\n", cpu, cpu_khz, freq);
+=======
+	pr_debug("CPU%u: %d -> dev: %u\n", cpu, cpu_khz, freq);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	return freq;
 }
 
@@ -375,6 +435,7 @@ static int devfreq_cpufreq_get_freq(struct devfreq *df,
 		return -ENODEV;
 	}
 
+<<<<<<< HEAD
 	if (node->drop) {
 		*freq = 0;
 		return 0;
@@ -390,6 +451,12 @@ static int devfreq_cpufreq_get_freq(struct devfreq *df,
 
 	node->prev_tgt = tgt_freq;
 
+=======
+	for_each_possible_cpu(cpu)
+		tgt_freq = max(tgt_freq, cpu_to_dev_freq(df, cpu));
+
+	*freq = tgt_freq;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	return 0;
 }
 
@@ -448,11 +515,16 @@ static ssize_t show_map(struct device *dev, struct device_attribute *attr,
 }
 
 static DEVICE_ATTR(freq_map, 0444, show_map, NULL);
+<<<<<<< HEAD
 gov_attr(timeout, 0U, 100U);
 
 static struct attribute *dev_attr[] = {
 	&dev_attr_freq_map.attr,
 	&dev_attr_timeout.attr,
+=======
+static struct attribute *dev_attr[] = {
+	&dev_attr_freq_map.attr,
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	NULL,
 };
 
@@ -491,16 +563,29 @@ static int devfreq_cpufreq_gov_start(struct devfreq *devfreq)
 		node->dev = devfreq->dev.parent;
 		list_add_tail(&node->list, &devfreq_list);
 	}
+<<<<<<< HEAD
 
 	INIT_DELAYED_WORK(&node->dwork, do_timeout);
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	node->df = devfreq;
 	node->orig_data = devfreq->data;
 	devfreq->data = node;
 
+<<<<<<< HEAD
 	ret = update_node(node);
 	if (ret)
 		goto update_fail;
+=======
+	mutex_lock(&devfreq->lock);
+	ret = update_devfreq(devfreq);
+	mutex_unlock(&devfreq->lock);
+	if (ret) {
+		pr_err("Freq update failed!\n");
+		goto update_fail;
+	}
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	mutex_unlock(&state_lock);
 	return 0;
@@ -522,8 +607,11 @@ static void devfreq_cpufreq_gov_stop(struct devfreq *devfreq)
 {
 	struct devfreq_node *node = devfreq->data;
 
+<<<<<<< HEAD
 	cancel_delayed_work_sync(&node->dwork);
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	mutex_lock(&state_lock);
 	devfreq->data = node->orig_data;
 	if (node->map || node->common_map) {
@@ -667,6 +755,10 @@ static int __init devfreq_cpufreq_init(void)
 				pr_err("Parsing %s failed!\n", of_child->name);
 			else
 				pr_debug("Parsed %s.\n", of_child->name);
+<<<<<<< HEAD
+=======
+			of_node_put(of_child);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		}
 		of_node_put(of_par);
 	} else {

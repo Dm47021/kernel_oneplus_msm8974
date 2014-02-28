@@ -39,8 +39,11 @@ struct hwmon_node {
 	unsigned int bw_step;
 	unsigned long prev_ab;
 	unsigned long *dev_ab;
+<<<<<<< HEAD
 	unsigned long resume_freq;
 	unsigned long resume_ab;
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	ktime_t prev_ts;
 	bool mon_started;
 	struct list_head list;
@@ -211,6 +214,7 @@ int update_bw_hwmon(struct bw_hwmon *hwmon)
 	return 0;
 }
 
+<<<<<<< HEAD
 static int start_monitor(struct devfreq *df, bool init)
 {
 	struct hwmon_node *node = df->data;
@@ -266,6 +270,12 @@ static void stop_monitor(struct devfreq *df, bool init)
 static int gov_start(struct devfreq *df)
 {
 	int ret = 0;
+=======
+static int start_monitoring(struct devfreq *df)
+{
+	int ret = 0;
+	unsigned long mbps;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	struct device *dev = df->dev.parent;
 	struct hwmon_node *node;
 	struct bw_hwmon *hw;
@@ -290,8 +300,22 @@ static int gov_start(struct devfreq *df)
 	node->orig_data = df->data;
 	df->data = node;
 
+<<<<<<< HEAD
 	if (start_monitor(df, true))
 		goto err_start;
+=======
+	node->prev_ts = ktime_get();
+	node->prev_ab = 0;
+	mbps = (df->previous_freq * node->io_percent) / 100;
+	ret = hw->start_hwmon(hw, mbps);
+	if (ret) {
+		dev_err(dev, "Unable to start HW monitor!\n");
+		goto err_start;
+	}
+
+	devfreq_monitor_start(df);
+	node->mon_started = true;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	ret = sysfs_create_group(&df->dev.kobj, node->attr_grp);
 	if (ret)
@@ -300,7 +324,13 @@ static int gov_start(struct devfreq *df)
 	return 0;
 
 err_sysfs:
+<<<<<<< HEAD
 	stop_monitor(df, true);
+=======
+	node->mon_started = false;
+	devfreq_monitor_stop(df);
+	hw->stop_hwmon(hw);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 err_start:
 	df->data = node->orig_data;
 	node->orig_data = NULL;
@@ -309,13 +339,23 @@ err_start:
 	return ret;
 }
 
+<<<<<<< HEAD
 static void gov_stop(struct devfreq *df)
+=======
+static void stop_monitoring(struct devfreq *df)
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 {
 	struct hwmon_node *node = df->data;
 	struct bw_hwmon *hw = node->hw;
 
 	sysfs_remove_group(&df->dev.kobj, node->attr_grp);
+<<<<<<< HEAD
 	stop_monitor(df, true);
+=======
+	node->mon_started = false;
+	devfreq_monitor_stop(df);
+	hw->stop_hwmon(hw);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	df->data = node->orig_data;
 	node->orig_data = NULL;
 	hw->df = NULL;
@@ -330,6 +370,7 @@ static void gov_stop(struct devfreq *df)
 	node->dev_ab = NULL;
 }
 
+<<<<<<< HEAD
 static int gov_suspend(struct devfreq *df)
 {
 	struct hwmon_node *node = df->data;
@@ -378,6 +419,8 @@ static int gov_resume(struct devfreq *df)
 	return start_monitor(df, false);
 }
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 static int devfreq_bw_hwmon_get_freq(struct devfreq *df,
 					unsigned long *freq,
 					u32 *flag)
@@ -385,6 +428,7 @@ static int devfreq_bw_hwmon_get_freq(struct devfreq *df,
 	unsigned long mbps;
 	struct hwmon_node *node = df->data;
 
+<<<<<<< HEAD
 	/* Suspend/resume sequence */
 	if (!node->mon_started) {
 		*freq = node->resume_freq;
@@ -392,6 +436,8 @@ static int devfreq_bw_hwmon_get_freq(struct devfreq *df,
 		return 0;
 	}
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	mbps = measure_bw_and_set_irq(node);
 	compute_bw(node, mbps, freq, node->dev_ab);
 
@@ -431,7 +477,11 @@ static int devfreq_bw_hwmon_ev_handler(struct devfreq *df,
 		sample_ms = min(MAX_MS, sample_ms);
 		df->profile->polling_ms = sample_ms;
 
+<<<<<<< HEAD
 		ret = gov_start(df);
+=======
+		ret = start_monitoring(df);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		if (ret)
 			return ret;
 
@@ -440,7 +490,11 @@ static int devfreq_bw_hwmon_ev_handler(struct devfreq *df,
 		break;
 
 	case DEVFREQ_GOV_STOP:
+<<<<<<< HEAD
 		gov_stop(df);
+=======
+		stop_monitoring(df);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		dev_dbg(df->dev.parent,
 			"Disabled dev BW HW monitor governor\n");
 		break;
@@ -451,6 +505,7 @@ static int devfreq_bw_hwmon_ev_handler(struct devfreq *df,
 		sample_ms = min(MAX_MS, sample_ms);
 		devfreq_interval_update(df, &sample_ms);
 		break;
+<<<<<<< HEAD
 
 	case DEVFREQ_GOV_SUSPEND:
 		ret = gov_suspend(df);
@@ -475,6 +530,8 @@ static int devfreq_bw_hwmon_ev_handler(struct devfreq *df,
 
 		dev_dbg(df->dev.parent, "Resumed BW HW mon governor\n");
 		break;
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	}
 
 	return 0;

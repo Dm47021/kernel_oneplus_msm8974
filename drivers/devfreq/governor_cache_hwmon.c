@@ -31,6 +31,7 @@
 #include "governor.h"
 #include "governor_cache_hwmon.h"
 
+<<<<<<< HEAD
 struct cache_hwmon_node {
 	unsigned int cycles_per_low_req;
 	unsigned int cycles_per_med_req;
@@ -55,13 +56,19 @@ static DEFINE_MUTEX(list_lock);
 static int use_cnt;
 static DEFINE_MUTEX(state_lock);
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 #define show_attr(name) \
 static ssize_t show_##name(struct device *dev,				\
 			struct device_attribute *attr, char *buf)	\
 {									\
+<<<<<<< HEAD
 	struct devfreq *df = to_devfreq(dev);				\
 	struct cache_hwmon_node *hw = df->data;				\
 	return snprintf(buf, PAGE_SIZE, "%u\n", hw->name);		\
+=======
+	return snprintf(buf, PAGE_SIZE, "%u\n", name);			\
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 }
 
 #define store_attr(name, _min, _max) \
@@ -71,14 +78,21 @@ static ssize_t store_##name(struct device *dev,				\
 {									\
 	int ret;							\
 	unsigned int val;						\
+<<<<<<< HEAD
 	struct devfreq *df = to_devfreq(dev);				\
 	struct cache_hwmon_node *hw = df->data;				\
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	ret = sscanf(buf, "%u", &val);					\
 	if (ret != 1)							\
 		return -EINVAL;						\
 	val = max(val, _min);						\
 	val = min(val, _max);						\
+<<<<<<< HEAD
 	hw->name = val;							\
+=======
+	name = val;							\
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	return count;							\
 }
 
@@ -87,6 +101,7 @@ show_attr(__attr)			\
 store_attr(__attr, min, max)		\
 static DEVICE_ATTR(__attr, 0644, show_##__attr, store_##__attr)
 
+<<<<<<< HEAD
 #define MIN_MS	10U
 #define MAX_MS	500U
 
@@ -107,11 +122,34 @@ static struct cache_hwmon_node *find_hwmon_node(struct devfreq *df)
 }
 
 static unsigned long measure_mrps_and_set_irq(struct cache_hwmon_node *node,
+=======
+
+static struct cache_hwmon *hw;
+static unsigned int cycles_per_low_req;
+static unsigned int cycles_per_med_req = 20;
+static unsigned int cycles_per_high_req = 35;
+static unsigned int min_busy = 100;
+static unsigned int max_busy = 100;
+static unsigned int tolerance_mrps = 5;
+static unsigned int guard_band_mhz = 100;
+static unsigned int decay_rate = 90;
+
+#define MIN_MS	10U
+#define MAX_MS	500U
+static unsigned int sample_ms = 50;
+static unsigned long prev_mhz;
+static ktime_t prev_ts;
+
+static unsigned long measure_mrps_and_set_irq(struct devfreq *df,
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 			struct mrps_stats *stat)
 {
 	ktime_t ts;
 	unsigned int us;
+<<<<<<< HEAD
 	struct cache_hwmon *hw = node->hw;
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	/*
 	 * Since we are stopping the counters, we don't want this short work
@@ -123,6 +161,7 @@ static unsigned long measure_mrps_and_set_irq(struct cache_hwmon_node *node,
 	preempt_disable();
 
 	ts = ktime_get();
+<<<<<<< HEAD
 	us = ktime_to_us(ktime_sub(ts, node->prev_ts));
 	if (!us)
 		us = 1;
@@ -137,26 +176,54 @@ static unsigned long measure_mrps_and_set_irq(struct cache_hwmon_node *node,
 		 stat->mrps[HIGH], stat->mrps[MED], stat->mrps[LOW],
 		 stat->mrps[HIGH] + stat->mrps[MED] + stat->mrps[LOW],
 		 stat->busy_percent, hw->df->previous_freq / 1000, us);
+=======
+	us = ktime_to_us(ktime_sub(ts, prev_ts));
+	if (!us)
+		us = 1;
+
+	hw->meas_mrps_and_set_irq(df, tolerance_mrps, us, stat);
+	prev_ts = ts;
+
+	preempt_enable();
+
+	pr_debug("stat H=%3lu, M=%3lu, T=%3lu, b=%3u, f=%4lu, us=%d\n",
+		 stat->high, stat->med, stat->high + stat->med,
+		 stat->busy_percent, df->previous_freq / 1000, us);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	return 0;
 }
 
+<<<<<<< HEAD
 static void compute_cache_freq(struct cache_hwmon_node *node,
 		struct mrps_stats *mrps, unsigned long *freq)
+=======
+static void compute_cache_freq(struct mrps_stats *mrps, unsigned long *freq)
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 {
 	unsigned long new_mhz;
 	unsigned int busy;
 
+<<<<<<< HEAD
 	new_mhz = mrps->mrps[HIGH] * node->cycles_per_high_req
 		+ mrps->mrps[MED] * node->cycles_per_med_req
 		+ mrps->mrps[LOW] * node->cycles_per_low_req;
 
 	busy = max(node->min_busy, mrps->busy_percent);
 	busy = min(node->max_busy, busy);
+=======
+	new_mhz = mrps->high * cycles_per_high_req
+		+ mrps->med * cycles_per_med_req
+		+ mrps->low * cycles_per_low_req;
+
+	busy = max(min_busy, mrps->busy_percent);
+	busy = min(max_busy, busy);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	new_mhz *= 100;
 	new_mhz /= busy;
 
+<<<<<<< HEAD
 	if (new_mhz < node->prev_mhz) {
 		new_mhz = new_mhz * node->decay_rate + node->prev_mhz
 				* (100 - node->decay_rate);
@@ -165,18 +232,34 @@ static void compute_cache_freq(struct cache_hwmon_node *node,
 	node->prev_mhz = new_mhz;
 
 	new_mhz += node->guard_band_mhz;
+=======
+	if (new_mhz < prev_mhz) {
+		new_mhz = new_mhz * decay_rate + prev_mhz * (100 - decay_rate);
+		new_mhz /= 100;
+	}
+	prev_mhz = new_mhz;
+
+	new_mhz += guard_band_mhz;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	*freq = new_mhz * 1000;
 }
 
 #define TOO_SOON_US	(1 * USEC_PER_MSEC)
+<<<<<<< HEAD
 int update_cache_hwmon(struct cache_hwmon *hwmon)
 {
 	struct cache_hwmon_node *node;
 	struct devfreq *df;
+=======
+static irqreturn_t mon_intr_handler(int irq, void *dev)
+{
+	struct devfreq *df = dev;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	ktime_t ts;
 	unsigned int us;
 	int ret;
 
+<<<<<<< HEAD
 	if (!hwmon)
 		return -EINVAL;
 	df = hwmon->df;
@@ -189,6 +272,12 @@ int update_cache_hwmon(struct cache_hwmon *hwmon)
 		return -EBUSY;
 
 	dev_dbg(df->dev.parent, "Got update request\n");
+=======
+	if (!hw->is_valid_irq(df))
+		return IRQ_NONE;
+
+	pr_debug("Got interrupt\n");
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	devfreq_monitor_stop(df);
 
 	/*
@@ -204,19 +293,31 @@ int update_cache_hwmon(struct cache_hwmon *hwmon)
 	 *    readjusted.
 	 */
 	ts = ktime_get();
+<<<<<<< HEAD
 	us = ktime_to_us(ktime_sub(ts, node->prev_ts));
+=======
+	us = ktime_to_us(ktime_sub(ts, prev_ts));
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	if (us > TOO_SOON_US) {
 		mutex_lock(&df->lock);
 		ret = update_devfreq(df);
 		if (ret)
+<<<<<<< HEAD
 			dev_err(df->dev.parent,
 				"Unable to update freq on request!\n");
+=======
+			pr_err("Unable to update freq on IRQ!\n");
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		mutex_unlock(&df->lock);
 	}
 
 	devfreq_monitor_start(df);
 
+<<<<<<< HEAD
 	return 0;
+=======
+	return IRQ_HANDLED;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 }
 
 static int devfreq_cache_hwmon_get_freq(struct devfreq *df,
@@ -224,11 +325,17 @@ static int devfreq_cache_hwmon_get_freq(struct devfreq *df,
 					u32 *flag)
 {
 	struct mrps_stats stat;
+<<<<<<< HEAD
 	struct cache_hwmon_node *node = df->data;
 
 	memset(&stat, 0, sizeof(stat));
 	measure_mrps_and_set_irq(node, &stat);
 	compute_cache_freq(node, &stat, freq);
+=======
+
+	measure_mrps_and_set_irq(df, &stat);
+	compute_cache_freq(&stat, freq);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	return 0;
 }
@@ -263,6 +370,7 @@ static int start_monitoring(struct devfreq *df)
 {
 	int ret;
 	struct mrps_stats mrps;
+<<<<<<< HEAD
 	struct device *dev = df->dev.parent;
 	struct cache_hwmon_node *node;
 	struct cache_hwmon *hw;
@@ -295,12 +403,40 @@ static int start_monitoring(struct devfreq *df)
 	ret = sysfs_create_group(&df->dev.kobj, &dev_attr_group);
 	if (ret) {
 		dev_err(dev, "Error creating sys entries!\n");
+=======
+
+	prev_ts = ktime_get();
+	prev_mhz = 0;
+	mrps.high = (df->previous_freq / 1000) - guard_band_mhz;
+	mrps.high /= cycles_per_high_req;
+
+	ret = hw->start_hwmon(df, &mrps);
+	if (ret) {
+		pr_err("Unable to start HW monitor!\n");
+		return ret;
+	}
+
+	devfreq_monitor_start(df);
+
+	ret = request_threaded_irq(hw->irq, NULL, mon_intr_handler,
+			  IRQF_ONESHOT | IRQF_SHARED,
+			  "cache_hwmon", df);
+	if (ret) {
+		pr_err("Unable to register interrupt handler!\n");
+		goto req_irq_fail;
+	}
+
+	ret = sysfs_create_group(&df->dev.kobj, &dev_attr_group);
+	if (ret) {
+		pr_err("Error creating sys entries!\n");
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		goto sysfs_fail;
 	}
 
 	return 0;
 
 sysfs_fail:
+<<<<<<< HEAD
 	node->mon_started = false;
 	devfreq_monitor_stop(df);
 	hw->stop_hwmon(hw);
@@ -308,11 +444,19 @@ err_start:
 	df->data = node->orig_data;
 	node->orig_data = NULL;
 	hw->df = NULL;
+=======
+	disable_irq(hw->irq);
+	free_irq(hw->irq, df);
+req_irq_fail:
+	devfreq_monitor_stop(df);
+	hw->stop_hwmon(df);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	return ret;
 }
 
 static void stop_monitoring(struct devfreq *df)
 {
+<<<<<<< HEAD
 	struct cache_hwmon_node *node = df->data;
 	struct cache_hwmon *hw = node->hw;
 
@@ -323,13 +467,23 @@ static void stop_monitoring(struct devfreq *df)
 	df->data = node->orig_data;
 	node->orig_data = NULL;
 	hw->df = NULL;
+=======
+	sysfs_remove_group(&df->dev.kobj, &dev_attr_group);
+	disable_irq(hw->irq);
+	free_irq(hw->irq, df);
+	devfreq_monitor_stop(df);
+	hw->stop_hwmon(df);
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 }
 
 static int devfreq_cache_hwmon_ev_handler(struct devfreq *df,
 					unsigned int event, void *data)
 {
 	int ret;
+<<<<<<< HEAD
 	unsigned int sample_ms;
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	switch (event) {
 	case DEVFREQ_GOV_START:
@@ -342,12 +496,20 @@ static int devfreq_cache_hwmon_ev_handler(struct devfreq *df,
 		if (ret)
 			return ret;
 
+<<<<<<< HEAD
 		dev_dbg(df->dev.parent, "Enabled Cache HW monitor governor\n");
+=======
+		pr_debug("Enabled Cache HW monitor governor\n");
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		break;
 
 	case DEVFREQ_GOV_STOP:
 		stop_monitoring(df);
+<<<<<<< HEAD
 		dev_dbg(df->dev.parent, "Disabled Cache HW monitor governor\n");
+=======
+		pr_debug("Disabled Cache HW monitor governor\n");
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		break;
 
 	case DEVFREQ_GOV_INTERVAL:
@@ -367,6 +529,7 @@ static struct devfreq_governor devfreq_cache_hwmon = {
 	.event_handler = devfreq_cache_hwmon_ev_handler,
 };
 
+<<<<<<< HEAD
 int register_cache_hwmon(struct device *dev, struct cache_hwmon *hwmon)
 {
 	int ret = 0;
@@ -411,6 +574,20 @@ int register_cache_hwmon(struct device *dev, struct cache_hwmon *hwmon)
 	mutex_unlock(&list_lock);
 
 	return ret;
+=======
+int register_cache_hwmon(struct cache_hwmon *hwmon)
+{
+	int ret;
+
+	hw = hwmon;
+	ret = devfreq_add_governor(&devfreq_cache_hwmon);
+	if (ret) {
+		pr_err("devfreq governor registration failed\n");
+		return ret;
+	}
+
+	return 0;
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 }
 
 MODULE_DESCRIPTION("HW monitor based cache freq driver");

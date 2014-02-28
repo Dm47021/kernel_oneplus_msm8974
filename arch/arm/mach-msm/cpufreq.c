@@ -20,8 +20,6 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/cpufreq.h>
-#include <linux/workqueue.h>
-#include <linux/completion.h>
 #include <linux/cpu.h>
 #include <linux/cpumask.h>
 #include <linux/sched.h>
@@ -39,6 +37,7 @@ static struct clk *cpu_clk[NR_CPUS];
 static struct clk *l2_clk;
 static DEFINE_PER_CPU(struct cpufreq_frequency_table *, freq_table);
 static bool hotplug_ready;
+<<<<<<< HEAD
 
 struct cpufreq_work_struct {
 	struct work_struct work;
@@ -51,6 +50,8 @@ struct cpufreq_work_struct {
 
 static DEFINE_PER_CPU(struct cpufreq_work_struct, cpufreq_work);
 static struct workqueue_struct *msm_cpufreq_wq;
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 struct cpufreq_suspend_t {
 	struct mutex suspend_mutex;
@@ -104,16 +105,6 @@ static int set_cpu_freq(struct cpufreq_policy *policy, unsigned int new_freq,
 	return ret;
 }
 
-static void set_cpu_work(struct work_struct *work)
-{
-	struct cpufreq_work_struct *cpu_work =
-		container_of(work, struct cpufreq_work_struct, work);
-
-	cpu_work->status = set_cpu_freq(cpu_work->policy, cpu_work->frequency,
-					cpu_work->index);
-	complete(&cpu_work->complete);
-}
-
 static int msm_cpufreq_target(struct cpufreq_policy *policy,
 				unsigned int target_freq,
 				unsigned int relation)
@@ -121,8 +112,6 @@ static int msm_cpufreq_target(struct cpufreq_policy *policy,
 	int ret = 0;
 	int index;
 	struct cpufreq_frequency_table *table;
-
-	struct cpufreq_work_struct *cpu_work = NULL;
 
 	mutex_lock(&per_cpu(cpufreq_suspend, policy->cpu).suspend_mutex);
 
@@ -148,19 +137,8 @@ static int msm_cpufreq_target(struct cpufreq_policy *policy,
 		policy->cpu, target_freq, relation,
 		policy->min, policy->max, table[index].frequency);
 
-	cpu_work = &per_cpu(cpufreq_work, policy->cpu);
-	cpu_work->policy = policy;
-	cpu_work->frequency = table[index].frequency;
-	cpu_work->index = table[index].index;
-	cpu_work->status = -ENODEV;
-
-	cancel_work_sync(&cpu_work->work);
-	INIT_COMPLETION(cpu_work->complete);
-	queue_work_on(policy->cpu, msm_cpufreq_wq, &cpu_work->work);
-	wait_for_completion(&cpu_work->complete);
-
-	ret = cpu_work->status;
-
+	ret = set_cpu_freq(policy, table[index].frequency,
+			   table[index].index);
 done:
 	mutex_unlock(&per_cpu(cpufreq_suspend, policy->cpu).suspend_mutex);
 	return ret;
@@ -186,7 +164,10 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	struct cpufreq_frequency_table *table =
 			per_cpu(freq_table, policy->cpu);
 	int cpu;
+<<<<<<< HEAD
 	struct cpufreq_work_struct *cpu_work = NULL;
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
 	/*
 	 * In some SoC, some cores are clocked by same source, and their
@@ -197,13 +178,15 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	for_each_possible_cpu(cpu)
 		if (cpu_clk[cpu] == cpu_clk[policy->cpu])
 			cpumask_set_cpu(cpu, policy->cpus);
+<<<<<<< HEAD
 
 	if (cpufreq_frequency_table_cpuinfo(policy, table))
 		pr_err("cpufreq: failed to get policy min/max\n");
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 
-	cpu_work = &per_cpu(cpufreq_work, policy->cpu);
-	INIT_WORK(&cpu_work->work, set_cpu_work);
-	init_completion(&cpu_work->complete);
+	if (cpufreq_frequency_table_cpuinfo(policy, table))
+		pr_err("cpufreq: failed to get policy min/max\n");
 
 	cur_freq = clk_get_rate(cpu_clk[policy->cpu])/1000;
 
@@ -362,10 +345,17 @@ static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 	if (!of_find_property(dev->of_node, tbl_name, &nf))
 		return ERR_PTR(-EINVAL);
 	nf /= sizeof(*data);
+<<<<<<< HEAD
 
 	if (nf == 0)
 		return ERR_PTR(-EINVAL);
 
+=======
+
+	if (nf == 0)
+		return ERR_PTR(-EINVAL);
+
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	data = devm_kzalloc(dev, nf * sizeof(*data), GFP_KERNEL);
 	if (!data)
 		return ERR_PTR(-ENOMEM);
@@ -373,11 +363,19 @@ static struct cpufreq_frequency_table *cpufreq_parse_dt(struct device *dev,
 	ret = of_property_read_u32_array(dev->of_node, tbl_name, data, nf);
 	if (ret)
 		return ERR_PTR(ret);
+<<<<<<< HEAD
 
 	ftbl = devm_kzalloc(dev, (nf + 1) * sizeof(*ftbl), GFP_KERNEL);
 	if (!ftbl)
 		return ERR_PTR(-ENOMEM);
 
+=======
+
+	ftbl = devm_kzalloc(dev, (nf + 1) * sizeof(*ftbl), GFP_KERNEL);
+	if (!ftbl)
+		return ERR_PTR(-ENOMEM);
+
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	for (i = 0; i < nf; i++) {
 		unsigned long f;
 
@@ -519,7 +517,10 @@ static int __init msm_cpufreq_register(void)
 		return rc;
 	}
 
+<<<<<<< HEAD
 	msm_cpufreq_wq = alloc_workqueue("msm-cpufreq", WQ_HIGHPRI, 0);
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	register_pm_notifier(&msm_cpufreq_pm_notifier);
 	return cpufreq_register_driver(&msm_cpufreq_driver);
 }

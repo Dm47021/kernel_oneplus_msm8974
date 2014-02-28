@@ -196,8 +196,12 @@ static int start_bw_hwmon(struct bw_hwmon *hw, unsigned long mbps)
 				  IRQF_ONESHOT | IRQF_SHARED,
 				  dev_name(m->dev), m);
 	if (ret) {
+<<<<<<< HEAD
 		dev_err(m->dev, "Unable to register interrupt handler! (%d)\n",
 				ret);
+=======
+		dev_err(m->dev, "Unable to register interrupt handler!\n");
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 		return ret;
 	}
 
@@ -226,6 +230,7 @@ static void stop_bw_hwmon(struct bw_hwmon *hw)
 	mon_clear(m);
 }
 
+<<<<<<< HEAD
 static int suspend_bw_hwmon(struct bw_hwmon *hw)
 {
 	struct bwmon *m = to_bwmon(hw);
@@ -250,6 +255,8 @@ static int resume_bw_hwmon(struct bw_hwmon *hw)
 	return 0;
 }
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 /*************************************************************************/
 
 static int bimc_bwmon_driver_probe(struct platform_device *pdev)
@@ -305,8 +312,11 @@ static int bimc_bwmon_driver_probe(struct platform_device *pdev)
 		return -EINVAL;
 	m->hw.start_hwmon = &start_bw_hwmon,
 	m->hw.stop_hwmon = &stop_bw_hwmon,
+<<<<<<< HEAD
 	m->hw.suspend_hwmon = &suspend_bw_hwmon,
 	m->hw.resume_hwmon = &resume_bw_hwmon,
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	m->hw.meas_bw_and_set_irq = &meas_bw_and_set_irq,
 
 	ret = register_bw_hwmon(dev, &m->hw);

@@ -214,6 +214,14 @@ int devfreq_add_devbw(struct device *dev)
 	return 0;
 }
 
+<<<<<<< HEAD
+=======
+static int devfreq_devbw_probe(struct platform_device *pdev)
+{
+	return devfreq_add_devbw(&pdev->dev);
+}
+
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 int devfreq_remove_devbw(struct device *dev)
 {
 	struct dev_data *d = dev_get_drvdata(dev);
@@ -222,6 +230,7 @@ int devfreq_remove_devbw(struct device *dev)
 	return 0;
 }
 
+<<<<<<< HEAD
 int devfreq_suspend_devbw(struct device *dev)
 {
 	struct dev_data *d = dev_get_drvdata(dev);
@@ -239,6 +248,8 @@ static int devfreq_devbw_probe(struct platform_device *pdev)
 	return devfreq_add_devbw(&pdev->dev);
 }
 
+=======
+>>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 static int devfreq_devbw_remove(struct platform_device *pdev)
 {
 	return devfreq_remove_devbw(&pdev->dev);
