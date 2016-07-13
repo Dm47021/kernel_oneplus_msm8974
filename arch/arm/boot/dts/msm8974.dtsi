@@ -389,6 +389,7 @@
 
 	sdhc_1: sdhci@f9824900 {
 		qcom,bus-width = <8>;
+		qcom,wakeup-on-idle;
 		compatible = "qcom,sdhci-msm";
 		reg = <0xf9824900 0x11c>, <0xf9824000 0x800>;
 		reg-names = "hc_mem", "core_mem";
