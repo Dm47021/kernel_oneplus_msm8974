@@ -54,7 +54,7 @@ module_param(sync_threshold, uint, 0644);
 static unsigned int input_boost_freq;
 module_param(input_boost_freq, uint, 0644);
 
-static unsigned int input_boost_ms = 40;
+static unsigned int input_boost_ms;
 module_param(input_boost_ms, uint, 0644);
 
 static u64 last_input_time;
