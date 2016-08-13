@@ -253,8 +253,8 @@ KERNEL_OPTS = \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
-HOSTCXXFLAGS = -O2
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -DNDEBUG -fno-stack-protector
+HOSTCXXFLAGS = -O2 -DNDEBUG -fno-stack-protector
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -570,17 +570,12 @@ endif # $(dot-config)
 # Defaults to vmlinux, but the arch makefile usually adds further targets
 all: vmlinux
 
-KBUILD_CFLAGS	+= $(KERNEL_OPTS) -fomit-frame-pointer -Wno-array-bounds -Wno-unused-parameter -Wno-sign-compare -Wno-missing-field-initializers -Wno-unused-variable -Wno-unused-value  $(call cc-disable-warning,maybe-uninitialized,)
+KBUILD_CFLAGS	+= $(KERNEL_OPTS) -DNDEBUG -fno-stack-protector -fomit-frame-pointer -Wno-array-bounds -Wno-unused-parameter -Wno-sign-compare -Wno-missing-field-initializers -Wno-unused-variable -Wno-unused-value  $(call cc-disable-warning,maybe-uninitialized,)
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
 
 ifneq ($(CONFIG_FRAME_WARN),0)
 KBUILD_CFLAGS += $(call cc-option,-Wframe-larger-than=${CONFIG_FRAME_WARN})
-endif
-
-# Force gcc to behave correct even for buggy distributions
-ifndef CONFIG_CC_STACKPROTECTOR
-KBUILD_CFLAGS += $(call cc-option, -fno-stack-protector)
 endif
 
 # This warning generated too much noise in a regular build.
