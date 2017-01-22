@@ -96,7 +96,6 @@ while read -p "Do you want to clean stuffs (y/n)? " cchoice
 do
 case "$cchoice" in
 	y|Y )
-		checkout_branches
 		clean_all
 		echo
 		echo "All Cleaned now."
