@@ -88,7 +88,7 @@ void mdss_dsi_ctrl_init(struct device *ctrl_dev,
 	if (mdss_register_irq(ctrl->dsi_hw))
 		pr_err("%s: mdss_register_irq failed.\n", __func__);
 
-	pr_debug("%s: ndx=%d base=%p\n", __func__, ctrl->ndx, ctrl->ctrl_base);
+	pr_debug("%s: ndx=%d base=%pK\n", __func__, ctrl->ndx, ctrl->ctrl_base);
 
 	init_completion(&ctrl->dma_comp);
 	init_completion(&ctrl->mdp_comp);
@@ -1507,14 +1507,7 @@ static int dsi_event_thread(void *data)
 	spin_lock_init(&ev->event_lock);
 
 	while (1) {
-		ret = wait_event_interruptible(ev->event_q,
-			(ev->event_pndx != ev->event_gndx) ||
-			kthread_should_stop());
-
-		if (ret) {
-			pr_debug("%s: interrupted\n", __func__);
-			continue;
-		}
+		wait_event(ev->event_q, (ev->event_pndx != ev->event_gndx));
 		spin_lock_irqsave(&ev->event_lock, flag);
 		evq = &ev->todo_list[ev->event_gndx++];
 		todo = evq->todo;

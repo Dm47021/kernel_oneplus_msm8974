@@ -389,7 +389,6 @@
 
 	sdhc_1: sdhci@f9824900 {
 		qcom,bus-width = <8>;
-		qcom,wakeup-on-idle;
 		compatible = "qcom,sdhci-msm";
 		reg = <0xf9824900 0x11c>, <0xf9824000 0x800>;
 		reg-names = "hc_mem", "core_mem";
@@ -842,9 +841,9 @@
 
 		qcom,l2-fmax =
 			<          0 0			 >,
-			<  652800000 4 /* SVS_SOC */	 >,
-			< 1113600000 5 /* NORMAL */	 >,
-			< 1804800000 7 /* SUPER_TURBO */ >;
+			<  576000000 4 /* SVS_SOC */	 >,
+			< 1036800000 5 /* NORMAL */	 >,
+			< 1728000000 7 /* SUPER_TURBO */ >;
 
 		qcom,speed0-pvs0-bin-v0 =
 			<          0       0   0 >,
@@ -1485,8 +1484,7 @@
 			< 3509 /* 460 MHz */ >,
 			< 4684 /* 614 MHz */ >,
 			< 6103 /* 800 MHz */ >,
-			< 7102 /* 931 MHz */ >,
-			< 7674 /* 1006 MHz */ >;
+			< 7102 /* 931 MHz */ >;
 	};
 
 	qcom,kraitbw-l2pm {
@@ -1590,7 +1588,6 @@
 			interrupts = <0 131 0>, <0 179 0>;
 			interrupt-names = "irq", "otg_irq";
 			tx-fifo-resize;
-			maximum-speed="high";
 		};
 	};
 
@@ -2151,7 +2148,6 @@
 
 	qcom_crypto1: qcrypto1@fd440000 {
 		compatible = "qcom,qcrypto";
-		status = "disabled";
 		reg = <0xfd440000 0x20000>,
 		      <0xfd444000 0x1b000>;
 		reg-names = "crypto-base","crypto-bam-base";
