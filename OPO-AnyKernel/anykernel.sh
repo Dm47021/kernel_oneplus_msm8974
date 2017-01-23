@@ -3,7 +3,7 @@
 
 ## AnyKernel setup
 # EDIFY properties
-kernel.string=Render Kernel by RenderBroken!
+kernel.string=Messiah Kernel by DM47021!
 do.devicecheck=1
 do.initd=1
 do.modules=1
@@ -165,7 +165,7 @@ replace_string default.prop "ro.secure=0" "ro.secure=1" "ro.secure=0";
 
 # init.bacon.rc
 backup_file init.bacon.rc;
-append_file init.bacon.rc "render-post_boot" init.bacon.patch;
+append_file init.bacon.rc "messiah-post_boot" init.bacon.patch;
 
 # panel and gamma
 backup_file init.qcom-common.rc
