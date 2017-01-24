@@ -47,11 +47,8 @@
 struct bw_hwmon {
 	int (*start_hwmon)(struct bw_hwmon *hw, unsigned long mbps);
 	void (*stop_hwmon)(struct bw_hwmon *hw);
-<<<<<<< HEAD
 	int (*suspend_hwmon)(struct bw_hwmon *hw);
 	int (*resume_hwmon)(struct bw_hwmon *hw);
-=======
->>>>>>> 529524b... devfreq: Backport MSM devfreq features from 3.10
 	unsigned long (*meas_bw_and_set_irq)(struct bw_hwmon *hw,
 					unsigned int tol, unsigned int us);
 	struct device *dev;
