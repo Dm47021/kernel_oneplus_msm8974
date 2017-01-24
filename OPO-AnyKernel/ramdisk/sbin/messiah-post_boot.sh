@@ -29,6 +29,17 @@ echo 1728000 > /sys/module/cpu_boost/parameters/sync_threshold
 echo 1 > /sys/module/cpu_boost/parameters/hotplug_boost
 echo 1 > /sys/module/cpu_boost/parameters/wakeup_boost
 
+#############################
+# CPU-Input-Boost Settings
+#
+echo 1 > /sys/kernel/cpu_input_boost/enabled
+echo "576000 1036800 2035200" > /sys/kernel/cpu_input_boost/boost_freqs
+
+# CPU0: 2.03Ghz 
+# CPU1: 1.03Ghz
+# CPU2: 576Mhz
+# CPU:3 NEVER BOOSTED!
+
 ############################
 # Tweak Background Writeout
 #
