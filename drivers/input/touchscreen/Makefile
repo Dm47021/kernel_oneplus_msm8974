@@ -90,4 +90,3 @@ obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S3508_I2C_RMI)	+= synaptics_dsx_rmi_dev.o
 obj-$(CONFIG_TOUCHSCREEN_GT9XX)		+= gt9xx/
 
 obj-$(CONFIG_TOUCHBOOST_CONTROL)	+= touchboost_switch.o
-obj-$(CONFIG_STATE_NOTIFIER)		+= state_notifier.o

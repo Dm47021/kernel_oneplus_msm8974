@@ -50,22 +50,6 @@
 /* OPPO 2013-10-24 yxq Add end */
 #define INT_DEBOUNCE_MSEC	10
 
-#ifdef CONFIG_MACH_OPPO
-/* liuyan@Onlinerd.driver, 2015/03/26  Add for fix low brightness flicker */
-#define FILTER_STR 0x50
-#endif /*CONFIG_MACH_OPPO*/
-
-#ifdef CONFIG_MACH_OPPO
-/* Xiaori.Yuan@Mobile Phone Software Dept.Driver, 2014/03/10  Add for flicker in low backlight */
-static bool pwm_flag = true;
-int cabc = 0;
-static int pre_brightness=0;
-#endif /*CONFIG_MACH_OPPO*/
-
-
-#include <linux/state_notifier.h>
-
-
 static struct lm3630_chip_data *lm3630_pchip;
 
 struct lm3630_chip_data {
@@ -79,6 +63,10 @@ struct lm3630_chip_data {
 	struct regmap *regmap;
 };
 
+#ifdef CONFIG_MACH_OPPO
+static int pre_brightness=0;
+#endif
+
 /* initialize chip */
 static int lm3630_chip_init(struct lm3630_chip_data *pchip)
 {
@@ -86,10 +74,6 @@ static int lm3630_chip_init(struct lm3630_chip_data *pchip)
 	unsigned int reg_val;
 	struct lm3630_platform_data *pdata = pchip->pdata;
 
-#ifdef CONFIG_MACH_OPPO
-/* liuyan@Onlinerd.driver, 2015/03/26  Add for low brightness filcker */
-	ret = regmap_update_bits(pchip->regmap, FILTER_STR, 0x03, 0x03);
-#endif /*CONFIG_MACH_OPPO*/
 	/*pwm control */
 	reg_val = ((pdata->pwm_active & 0x01) << 2) | (pdata->pwm_ctrl & 0x03);
 	ret = regmap_update_bits(pchip->regmap, REG_CONFIG, 0x07, reg_val);
@@ -211,113 +195,66 @@ static int lm3630_intr_config(struct lm3630_chip_data *pchip)
 	return 0;
 }
 
-#ifdef VENDOR_EDIT
-/* Xiaori.Yuan@Mobile Phone Software Dept.Driver, 2014/02/17  Add for set cabc */
-int set_backlight_pwm(int state)
-{
-    int rc = 0;
-	//if (get_pcb_version() < HW_VERSION__20) { /* For Find7 */
-        if (get_boot_mode() == MSM_BOOT_MODE__NORMAL) {
-			if(state == 1 && pre_brightness <= 0x14) return rc;
-        		if(state == 1)
-    			{
-       			 rc = regmap_update_bits(lm3630_pchip->regmap, REG_CONFIG, 0x01, 0x01);
-				 pwm_flag = true;
-   		    	}
-   			else
-   			{
-				rc = regmap_update_bits(lm3630_pchip->regmap, REG_CONFIG, 0x01, 0x00);
-				pwm_flag = false;
-  			}
-			pr_err("Backlight PWM is %d.\n", state);
-        }
-    //}
-    return rc;
-}
-
-void lm3630_cabc_changed(int state)
-{
-	cabc = state;
-	set_backlight_pwm(state);
-}
-EXPORT_SYMBOL(lm3630_cabc_changed);
-#endif /*VENDOR_EDIT*/
-
 /* update and get brightness */
  int lm3630_bank_a_update_status(u32 bl_level)
 {
 	int ret;
 	struct lm3630_chip_data *pchip = lm3630_pchip;
 	pr_debug("%s: bl=%d\n", __func__,bl_level);
-
-#ifdef CONFIG_STATE_NOTIFIER
-	// if display is switched off
-	if (bl_level == 0)
-		state_suspend();
-
-	// if display is switched on
-	if (bl_level != 0 && pre_brightness == 0)
-		state_resume();
-#endif /*CONFIG_STATE_NOTIFIER*/
+#ifdef CONFIG_MACH_OPPO
+/* Xiaori.Yuan@Mobile Phone Software Dept.Driver, 2014/04/28  Add for add log for 14001 black screen */
+		if(pre_brightness == 0)
+			{pr_err("%s set brightness :  %d \n",__func__,bl_level);}
+		pre_brightness=bl_level;
+#endif /*VENDOR_EDIT*/
 	
 	if(!pchip){
 		dev_err(pchip->dev, "lm3630_bank_a_update_status pchip is null\n");
 		return -ENOMEM;
-	}
+		}
 
-	if (!pchip->regmap || !lm3630_pchip->regmap) {
-		pr_err("%s YXQ pchip->regmap is NULL.\n", __func__);
-		return bl_level;
-	}
+    if (!pchip->regmap || !lm3630_pchip->regmap) {
+        pr_err("%s YXQ pchip->regmap is NULL.\n", __func__);
+        return bl_level;
+    }
 	
 	/* brightness 0 means disable */
 	if (!bl_level) {
-		ret = regmap_write(lm3630_pchip->regmap, REG_BRT_A, 0);
+        ret = regmap_write(lm3630_pchip->regmap, REG_BRT_A, 0);
 		ret = regmap_update_bits(pchip->regmap, REG_CTRL, 0x80, 0x80);
 		if (ret < 0)
 			goto out;
-		pre_brightness=bl_level;
 		return bl_level;
 	}
 
 	/* pwm control */
 	//bl_level=255;
-
-	/* i2c control */
-	ret = regmap_update_bits(pchip->regmap, REG_CTRL, 0x80, 0x00);
-	if (ret < 0)
-		goto out;
-	mdelay(1);
-
+		/* i2c control */
+		ret = regmap_update_bits(pchip->regmap, REG_CTRL, 0x80, 0x00);
+		if (ret < 0)
+			goto out;
+		mdelay(1);
+#if 1
 		ret = regmap_write(pchip->regmap,
 				   REG_BRT_A, bl_level);
-
-#ifdef CONFIG_MACH_OPPO
-		if(pre_brightness == 0) {
-			set_backlight_pwm(1);
-			pr_err("%s set brightness :  %d \n",__func__,bl_level);
-		}
-
-		if(bl_level <= 0x14) {
-			if(pwm_flag == true)
-				set_backlight_pwm(0);
-		} else {
-			if(pwm_flag == !cabc)
-				set_backlight_pwm(cabc);
-		}
-#endif
-
-	if (ret < 0)
-		goto out;
-
-	pre_brightness=bl_level;
-
+#else /* CONFIG_MACH_OPPO */
+		if(bl_level>20)
+			ret = regmap_write(pchip->regmap,
+				   REG_BRT_A, bl_level);
+		else if(get_pcb_version() < 20)
+			ret = regmap_write(pchip->regmap,
+				   REG_BRT_A, 2+(bl_level-1)*7/18);
+		else
+			ret = regmap_write(pchip->regmap,
+				   REG_BRT_A, 2+(bl_level-1)*9/18);
+#endif /* CONFIG_MACH_OPPO */
+		if (ret < 0)
+			goto out;
 	return bl_level;
 out:
 	dev_err(pchip->dev, "i2c failed to access REG_CTRL\n");
 	return bl_level;
 }
-
 
 static const struct regmap_config lm3630_regmap = {
 	.reg_bits = 8,
@@ -424,6 +361,7 @@ static ssize_t ftmbacklight_store(struct device *dev,
     /* this function is for ftm mode, it doesn't work when normal boot */
     if(get_boot_mode() == MSM_BOOT_MODE__FACTORY) {
         level = simple_strtoul(buf, NULL, 10);
+
         lm3630_bank_a_update_status(level);
     }
 #endif
@@ -432,7 +370,7 @@ static ssize_t ftmbacklight_store(struct device *dev,
 
     return count;
 }
-    DEVICE_ATTR(ftmbacklight, 0200, NULL, ftmbacklight_store);
+    DEVICE_ATTR(ftmbacklight, 0644, NULL, ftmbacklight_store);
 /* OPPO zhanglong add 2013-08-30 for ftm test LCD backlight end */
 #endif //CONFIG_MACH_OPPO
 
@@ -535,6 +473,9 @@ static int lm3630_probe(struct i2c_client *client,
 	}
 /* OPPO zhanglong add 2013-08-30 for ftm test LCD backlight end */
 #endif //CONFIG_MACH_OPPO
+
+	/* Always enable PWM mode */
+	regmap_update_bits(lm3630_pchip->regmap, REG_CONFIG, 0x01, 0x01);
 
 	return 0;
 
@@ -660,4 +601,3 @@ MODULE_DESCRIPTION("Texas Instruments Backlight driver for LM3630");
 MODULE_AUTHOR("G.Shark Jeong <gshark.jeong@gmail.com>");
 MODULE_AUTHOR("Daniel Jeong <daniel.jeong@ti.com>");
 MODULE_LICENSE("GPL v2");
-
