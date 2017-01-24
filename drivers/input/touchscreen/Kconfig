@@ -1045,4 +1045,8 @@ config TOUCHBOOST_CONTROL
 	  Boeffla Kernels functionality to control input boost as touch boost
 	  in the Boeffla Config app
 
+config STATE_NOTIFIER		
+        bool "State Notifier"		
+	default y		
+
 endif
