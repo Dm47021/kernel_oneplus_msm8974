@@ -30,11 +30,11 @@ export KBUILD_BUILD_USER=DM47021
 
 # Paths
 KERNEL_DIR=`pwd`
-REPACK_DIR="/home/dm47021/Android/kernel/oneplus_one/kernel_oneplus_msm8974/OPO-AnyKernel"
-PATCH_DIR="/home/dm47021/Android/kernel/oneplus_one/kernel_oneplus_msm8974/OPO-AnyKernel/patch"
-MODULES_DIR="/home/dm47021/Android/kernel/oneplus_one/kernel_oneplus_msm8974/OPO-AnyKernel/modules"
-ZIP_MOVE="$/home/dm47021/Android/kernel/oneplus_one/kernel_oneplus_msm8974/zips/opo-cm-zips"
-ZIMAGE_DIR="/home/dm47021/Android/kernel/oneplus_one/kernel_oneplus_msm8974/arch/arm/boot"
+REPACK_DIR="/home/dm47021/Android/Kernel/oneplus_one/kernel_oneplus_msm8974/OPO-AnyKernel"
+PATCH_DIR="/home/dm47021/Android/Kernel/oneplus_one/kernel_oneplus_msm8974/OPO-AnyKernel/patch"
+MODULES_DIR="/home/dm47021/Android/Kernel/oneplus_one/kernel_oneplus_msm8974/OPO-AnyKernel/modules"
+ZIP_MOVE="/home/dm47021/Android/Kernel/oneplus_one/kernel_oneplus_msm8974/zips/opo-cm-zips"
+ZIMAGE_DIR="/home/dm47021/Android/Kernel/oneplus_one/kernel_oneplus_msm8974/arch/arm/boot"
 VARIANT="OPO"
 
 # Functions
@@ -80,13 +80,12 @@ echo "Render Kernel Creation Script:"
 echo -e "${restore}"
 
 echo "Pick Toolchain..."
-select choice in linaro-4.9-cortex-a15
+select choice in UBER-4.9
 do
 case "$choice" in
-	"linaro-4.9-cortex-a15")
-		export CROSS_COMPILE=/home/dm47021/Android/toolchains/linaro-4.9-cortex-a15/bin/arm-cortex_a15-linux-gnueabihf-
+	"UBER-4.9")
+		export CROSS_COMPILE=/home/dm47021/Android/toolchains/UBERTC-arm-eabi-4.9/bin/arm-eabi-
 		break;;
-case "$choice" in
 	"UBER-5.x")
 		export CROSS_COMPILE=/home/dm47021/Android/toolchains/UBERTC-arm-eabi-5.x/bin/arm-eabi-
 		break;;
