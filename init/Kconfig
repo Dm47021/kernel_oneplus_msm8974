@@ -29,12 +29,6 @@ config IRQ_WORK
 
 menu "General setup"
 
-config COMPILE_WITH_LINARO_O3_OPTIMIZATIONS
-       default n
-       bool "build with O3 Maximum Optimization level"
-       help
-       Builds faster Code
-
 config EXPERIMENTAL
 	bool "Prompt for development and/or incomplete code/drivers"
 	---help---
